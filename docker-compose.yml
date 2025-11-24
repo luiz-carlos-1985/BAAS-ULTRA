@@ -1,0 +1,184 @@
+version: '3.8'
+
+services:
+  # Databases
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: baas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    volumes:
+      - mongo_data:/data/db
+
+  neo4j:
+    image: neo4j:5
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/password
+    volumes:
+      - neo4j_data:/data
+
+  # Message Queue
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: "-js -m 8222"
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deployments/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  # Services
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - nats
+
+  auth-service:
+    build: ./services/auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/baas?sslmode=disable
+      - REDIS_URL=redis:6379
+      - JWT_SECRET=ultra-secret-key
+      - PORT=8081
+    depends_on:
+      - postgres
+      - redis
+
+  account-service:
+    build: ./services/account-service
+    ports:
+      - "8082:8082"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/baas?sslmode=disable
+      - NATS_URL=nats://nats:4222
+      - PORT=8082
+    depends_on:
+      - postgres
+      - nats
+
+  card-service:
+    build: ./services/card-service
+    ports:
+      - "8083:8083"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/baas?sslmode=disable
+      - PORT=8083
+    depends_on:
+      - postgres
+
+  payment-service:
+    build: ./services/payment-service
+    ports:
+      - "8084:8084"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/baas?sslmode=disable
+      - NATS_URL=nats://nats:4222
+      - PORT=8084
+    depends_on:
+      - postgres
+      - nats
+
+  kyc-service:
+    build: ./services/kyc-service
+    ports:
+      - "8085:8085"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/baas?sslmode=disable
+      - MONGODB_URL=mongodb://admin:admin@mongodb:27017
+      - PORT=8085
+    depends_on:
+      - postgres
+      - mongodb
+
+  risk-service:
+    build: ./services/risk-service
+    ports:
+      - "8086:8086"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/baas?sslmode=disable
+      - NEO4J_URL=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=password
+      - PORT=8086
+    depends_on:
+      - postgres
+      - neo4j
+
+  ledger-service:
+    build: ./services/ledger-service
+    ports:
+      - "8087:8087"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/baas?sslmode=disable
+      - PORT=8087
+    depends_on:
+      - postgres
+
+  analytics-service:
+    build: ./services/analytics-service
+    ports:
+      - "8088:8088"
+    environment:
+      - PORT=8088
+
+  notification-service:
+    build: ./services/notification-service
+    ports:
+      - "8089:8089"
+    environment:
+      - PORT=8089
+
+volumes:
+  postgres_data:
+  redis_data:
+  mongo_data:
+  neo4j_data:
+  prometheus_data:
+  grafana_data:
