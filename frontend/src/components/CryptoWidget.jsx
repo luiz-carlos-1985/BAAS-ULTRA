@@ -1,26 +1,13 @@
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, Bitcoin, DollarSign } from 'lucide-react'
+import { TrendingUp, TrendingDown, Bitcoin } from 'lucide-react'
 
 export default function CryptoWidget() {
-  const [cryptos, setCryptos] = useState([
+  const cryptos = [
     { symbol: 'BTC', name: 'Bitcoin', price: 43250, change: 2.3 },
     { symbol: 'ETH', name: 'Ethereum', price: 2680, change: -1.2 },
     { symbol: 'ADA', name: 'Cardano', price: 0.52, change: 4.1 },
     { symbol: 'SOL', name: 'Solana', price: 98.5, change: 1.8 }
-  ])
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCryptos(prev => prev.map(crypto => ({
-        ...crypto,
-        price: crypto.price * (1 + (Math.random() - 0.5) * 0.02),
-        change: (Math.random() - 0.5) * 10
-      })))
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [])
+  ]
 
   return (
     <div className="glass rounded-2xl p-6">

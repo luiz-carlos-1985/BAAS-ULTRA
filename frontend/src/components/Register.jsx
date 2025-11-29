@@ -16,7 +16,7 @@ export default function Register({ onSwitch }) {
   const [showPassword, setShowPassword] = useState(false)
   const [focusedField, setFocusedField] = useState(null)
   const [errors, setErrors] = useState({})
-  const { setUser, setToken, setLoading: setGlobalLoading } = useStore()
+  const { setUser, setToken } = useStore()
 
   const validateForm = () => {
     const newErrors = {}
@@ -36,20 +36,17 @@ export default function Register({ onSwitch }) {
     if (!validateForm()) return
     
     setLoading(true)
-    setGlobalLoading(true)
     
     try {
       const data = await api.register(formData)
-      if (data.token) {
+      if (data.token && data.user) {
         setToken(data.token)
         setUser(data.user)
       }
     } catch (error) {
       console.error('Register error:', error)
       setErrors({ general: error.message || 'Error creating account' })
-    } finally {
       setLoading(false)
-      setGlobalLoading(false)
     }
   }
 

@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CreditCard, Send, TrendingUp, Wallet, LogOut, Plus, Eye, EyeOff, Zap, Shield, Brain, ArrowUpRight, ArrowDownLeft, Sparkles, Bell, Settings, Search, Filter, MoreVertical, Copy, Check } from 'lucide-react'
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { CreditCard, Send, TrendingUp, Wallet, LogOut, Plus, Eye, EyeOff, Zap, Shield, Brain, ArrowUpRight, ArrowDownLeft, Sparkles, Bell, Settings, MoreVertical, Copy, Check } from 'lucide-react'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { useStore } from '../store/useStore'
 import { api } from '../services/api'
 import { formatCurrency, formatDate } from '../utils/formatters'
 import TransferModal from './TransferModal'
 import CardModal from './CardModal'
+import SettingsModal from './SettingsModal'
 
 export default function Dashboard() {
   const { user, token, accounts, cards, transactions, totalBalance, setAccounts, setCards, logout } = useStore()
   const [showBalance, setShowBalance] = useState(true)
-  const [activeTab, setActiveTab] = useState('overview')
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
   const [notifications, setNotifications] = useState(3)
@@ -19,24 +19,6 @@ export default function Dashboard() {
   const [showSettings, setShowSettings] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [showCardModal, setShowCardModal] = useState(false)
-
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  const loadData = async () => {
-    if (accounts.length > 0) return
-    try {
-      if (token) {
-        const accountsData = await api.getAccounts(token)
-        if (accountsData && accountsData.accounts) {
-          setAccounts(accountsData.accounts)
-        }
-      }
-    } catch (error) {
-      console.error('Error loading data:', error)
-    }
-  }
 
   const handleCreateAccount = async () => {
     setLoading(true)
@@ -79,12 +61,12 @@ export default function Dashboard() {
   }
 
   const mockChartData = [
-    { name: 'Jan', income: 4000, expense: 2800, net: 1200 },
-    { name: 'Feb', income: 3500, expense: 2200, net: 1300 },
-    { name: 'Mar', income: 5200, expense: 3100, net: 2100 },
-    { name: 'Apr', income: 4800, expense: 2900, net: 1900 },
-    { name: 'May', income: 6200, expense: 3400, net: 2800 },
-    { name: 'Jun', income: 5800, expense: 3200, net: 2600 }
+    { name: 'Jan', income: 4000, expense: 2800 },
+    { name: 'Feb', income: 3500, expense: 2200 },
+    { name: 'Mar', income: 5200, expense: 3100 },
+    { name: 'Apr', income: 4800, expense: 2900 },
+    { name: 'May', income: 6200, expense: 3400 },
+    { name: 'Jun', income: 5800, expense: 3200 }
   ]
 
   const expenseData = [
@@ -111,100 +93,48 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 bg-slate-900">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold truncate">Hello, {user?.name?.split(' ')[0] || 'User'} 👋</h1>
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-              >
+              <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}>
                 <Sparkles className="w-6 h-6 text-yellow-400" />
               </motion.div>
             </div>
             <p className="text-sm md:text-base text-gray-400">Banking reimagined for the future</p>
           </div>
           <div className="flex items-center gap-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setShowNotifications(!showNotifications)
-                if (notifications > 0) setNotifications(0)
-              }}
-              className="glass rounded-xl p-3 relative"
-            >
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { setShowNotifications(!showNotifications); if (notifications > 0) setNotifications(0) }} className="glass rounded-xl p-3 relative">
               <Bell className="w-5 h-5" />
-              {notifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {notifications}
-                </span>
-              )}
+              {notifications > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{notifications}</span>}
             </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowSettings(!showSettings)}
-              className="glass rounded-xl p-3"
-            >
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowSettings(!showSettings)} className="glass rounded-xl p-3">
               <Settings className="w-5 h-5" />
             </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={logout}
-              className="glass rounded-xl px-4 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 hover:bg-red-500/20 transition text-sm sm:text-base"
-            >
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={logout} className="glass rounded-xl px-4 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 hover:bg-red-500/20 transition text-sm sm:text-base">
               <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden sm:inline">Logout</span>
             </motion.button>
           </div>
         </motion.div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            whileHover={{ y: -5 }}
-            className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 glow cursor-pointer group"
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} whileHover={{ y: -5 }} className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 glow cursor-pointer group">
             <div className="flex justify-between items-start mb-3 md:mb-4">
               <div className="flex-1 min-w-0">
                 <p className="text-gray-400 text-xs sm:text-sm mb-1">Total Balance</p>
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <motion.h2 
-                    className="text-xl sm:text-2xl md:text-3xl font-bold truncate"
-                    animate={showBalance ? { scale: [1, 1.05, 1] } : {}}
-                    transition={{ duration: 0.3 }}
-                  >
+                  <motion.h2 className="text-xl sm:text-2xl md:text-3xl font-bold truncate" animate={showBalance ? { scale: [1, 1.05, 1] } : {}} transition={{ duration: 0.3 }}>
                     {showBalance ? formatCurrency(totalBalance()) : '••••••'}
                   </motion.h2>
-                  <motion.button 
-                    onClick={() => setShowBalance(!showBalance)} 
-                    className="flex-shrink-0 p-1 hover:bg-white/10 rounded-lg transition"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
+                  <motion.button onClick={() => setShowBalance(!showBalance)} className="flex-shrink-0 p-1 hover:bg-white/10 rounded-lg transition" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                     <AnimatePresence mode="wait">
-                      {showBalance ? 
-                        <EyeOff key="hide" className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" /> : 
-                        <Eye key="show" className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                      }
+                      {showBalance ? <EyeOff key="hide" className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" /> : <Eye key="show" className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />}
                     </AnimatePresence>
                   </motion.button>
                 </div>
               </div>
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity }}
-              >
+              <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 4, repeat: Infinity }}>
                 <Wallet className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 text-primary flex-shrink-0" />
               </motion.div>
             </div>
@@ -217,13 +147,7 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            whileHover={{ y: -5 }}
-            className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 cursor-pointer group"
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} whileHover={{ y: -5 }} className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 cursor-pointer group">
             <div className="flex justify-between items-start mb-3 md:mb-4">
               <div>
                 <p className="text-gray-400 text-xs sm:text-sm mb-1">Monthly Income</p>
@@ -234,13 +158,7 @@ export default function Dashboard() {
             <p className="text-xs sm:text-sm text-gray-400">+8.2% vs last month</p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ y: -5 }}
-            className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 cursor-pointer group"
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} whileHover={{ y: -5 }} className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 cursor-pointer group">
             <div className="flex justify-between items-start mb-3 md:mb-4">
               <div>
                 <p className="text-gray-400 text-xs sm:text-sm mb-1">Monthly Expenses</p>
@@ -251,13 +169,7 @@ export default function Dashboard() {
             <p className="text-xs sm:text-sm text-gray-400">-2.1% vs last month</p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            whileHover={{ y: -5 }}
-            className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 cursor-pointer group"
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }} whileHover={{ y: -5 }} className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 cursor-pointer group">
             <div className="flex justify-between items-start mb-3 md:mb-4">
               <div>
                 <p className="text-gray-400 text-xs sm:text-sm mb-1">Savings</p>
@@ -269,70 +181,33 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 mb-6 md:mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 mb-6 md:mb-8">
           <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
             <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
             Quick Actions
           </h3>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleCreateAccount}
-              disabled={loading}
-              className="bg-primary hover:bg-indigo-600 active:bg-indigo-700 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition disabled:opacity-50 touch-manipulation"
-            >
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleCreateAccount} disabled={loading} className="bg-primary hover:bg-indigo-600 active:bg-indigo-700 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition disabled:opacity-50 touch-manipulation">
               <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
               <span className="text-xs sm:text-sm font-semibold">New Account</span>
             </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleCreateCard}
-              disabled={loading}
-              className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition disabled:opacity-50 touch-manipulation"
-            >
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleCreateCard} disabled={loading} className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition disabled:opacity-50 touch-manipulation">
               <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
               <span className="text-xs sm:text-sm font-semibold">New Card</span>
             </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowTransferModal(true)}
-              className="bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition touch-manipulation"
-            >
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowTransferModal(true)} className="bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition touch-manipulation">
               <Send className="w-5 h-5 sm:w-6 sm:h-6" />
               <span className="text-xs sm:text-sm font-semibold">Transfer</span>
             </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowCardModal(true)}
-              className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition touch-manipulation"
-            >
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowCardModal(true)} className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition touch-manipulation">
               <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
               <span className="text-xs sm:text-sm font-semibold">View Cards</span>
             </motion.button>
           </div>
         </motion.div>
 
-        {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 lg:col-span-2 overflow-hidden"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 lg:col-span-2 overflow-hidden">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg sm:text-xl font-bold flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-primary" />
@@ -364,15 +239,7 @@ export default function Dashboard() {
                   </defs>
                   <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
                   <YAxis stroke="#64748b" tick={{ fontSize: 12 }} width={50} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1e293b', 
-                      border: 'none', 
-                      borderRadius: '12px', 
-                      fontSize: '14px',
-                      boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
-                    }} 
-                  />
+                  <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '12px', fontSize: '14px', boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }} />
                   <Area type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" />
                   <Area type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" />
                 </AreaChart>
@@ -380,38 +247,17 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6">
             <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
               <Brain className="w-5 h-5 text-purple-400" />
               Expenses by Category
             </h3>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
-                <Pie
-                  data={expenseData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {expenseData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
+                <Pie data={expenseData} cx="50%" cy="50%" innerRadius={40} outerRadius={80} paddingAngle={5} dataKey="value">
+                  {expenseData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1e293b', 
-                    border: 'none', 
-                    borderRadius: '8px' 
-                  }} 
-                />
+                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
               </PieChart>
             </ResponsiveContainer>
             <div className="space-y-2 mt-4">
@@ -428,43 +274,21 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        {/* Recent Transactions & Accounts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg sm:text-xl font-bold flex items-center gap-2">
                 <Zap className="w-5 h-5 text-yellow-400" />
                 Recent Transactions
               </h3>
-              <button 
-                onClick={() => alert('Viewing all transactions...')}
-                className="text-primary hover:underline text-sm"
-              >
-                View all
-              </button>
+              <button onClick={() => alert('Viewing all transactions...')} className="text-primary hover:underline text-sm">View all</button>
             </div>
             <div className="space-y-3">
               {recentTransactions.map((transaction, index) => (
-                <motion.div
-                  key={transaction.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  className="bg-dark-light rounded-lg p-3 flex items-center justify-between hover:bg-dark-light/80 transition cursor-pointer group"
-                >
+                <motion.div key={transaction.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 * index }} className="bg-dark-light rounded-lg p-3 flex items-center justify-between hover:bg-dark-light/80 transition cursor-pointer group">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      transaction.type === 'income' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {transaction.type === 'income' ? 
-                        <ArrowUpRight className="w-5 h-5" /> : 
-                        <ArrowDownLeft className="w-5 h-5" />
-                      }
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${transaction.type === 'income' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                      {transaction.type === 'income' ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
                     </div>
                     <div>
                       <p className="font-semibold text-sm">{transaction.description}</p>
@@ -472,9 +296,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`font-bold ${
-                      transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
-                    }`}>
+                    <p className={`font-bold ${transaction.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
                       {transaction.type === 'income' ? '+' : ''}{formatCurrency(Math.abs(transaction.amount))}
                     </p>
                     <p className="text-xs text-gray-400 capitalize">{transaction.category}</p>
@@ -484,46 +306,23 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg sm:text-xl font-bold flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-primary" />
                 My Accounts
               </h3>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleCreateAccount}
-                className="bg-primary hover:bg-indigo-600 rounded-lg px-3 py-1.5 text-sm font-semibold transition"
-              >
-                + New
-              </motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleCreateAccount} className="bg-primary hover:bg-indigo-600 rounded-lg px-3 py-1.5 text-sm font-semibold transition">+ New</motion.button>
             </div>
             <div className="space-y-4">
               {accounts.length > 0 ? accounts.map((account, index) => (
-                <motion.div
-                  key={account.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  className="bg-gradient-to-r from-primary/20 to-purple-600/20 rounded-xl p-4 border border-primary/30 hover:border-primary/50 transition cursor-pointer group"
-                >
+                <motion.div key={account.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 * index }} className="bg-gradient-to-r from-primary/20 to-purple-600/20 rounded-xl p-4 border border-primary/30 hover:border-primary/50 transition cursor-pointer group">
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <p className="font-semibold">{account.type === 'checking' ? 'Checking Account' : 'Savings'}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <p className="text-sm text-gray-400">{account.accountNumber || '12345-6'}</p>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => copyToClipboard(account.accountNumber || '12345-6')}
-                          className="p-1 hover:bg-white/10 rounded transition"
-                        >
+                        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => copyToClipboard(account.accountNumber || '12345-6')} className="p-1 hover:bg-white/10 rounded transition">
                           {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-gray-400" />}
                         </motion.button>
                       </div>
@@ -545,37 +344,17 @@ export default function Dashboard() {
                 <div className="text-center py-8">
                   <Wallet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-400 mb-4">No accounts found</p>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleCreateAccount}
-                    className="bg-primary hover:bg-indigo-600 rounded-lg px-6 py-2 font-semibold transition"
-                  >
-                    Create first account
-                  </motion.button>
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleCreateAccount} className="bg-primary hover:bg-indigo-600 rounded-lg px-6 py-2 font-semibold transition">Create first account</motion.button>
                 </div>
               )}
             </div>
           </motion.div>
         </div>
 
-        {/* Notifications Modal */}
         <AnimatePresence>
           {showNotifications && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-              onClick={() => setShowNotifications(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="glass rounded-2xl p-6 max-w-md w-full"
-                onClick={(e) => e.stopPropagation()}
-              >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowNotifications(false)}>
+              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="glass rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <Bell className="w-5 h-5 text-yellow-400" />
                   Notifications
@@ -594,83 +373,15 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-400">Congratulations! You saved $2,210</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowNotifications(false)}
-                  className="w-full mt-4 bg-primary hover:bg-indigo-600 rounded-lg py-2 font-semibold transition"
-                >
-                  Close
-                </button>
+                <button onClick={() => setShowNotifications(false)} className="w-full mt-4 bg-primary hover:bg-indigo-600 rounded-lg py-2 font-semibold transition">Close</button>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Settings Modal */}
-        <AnimatePresence>
-          {showSettings && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-              onClick={() => setShowSettings(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="glass rounded-2xl p-6 max-w-md w-full"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Settings className="w-5 h-5 text-blue-400" />
-                  Settings
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>Push Notifications</span>
-                    <button className="bg-primary rounded-full w-12 h-6 flex items-center px-1">
-                      <div className="bg-white w-4 h-4 rounded-full ml-auto"></div>
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Biometrics</span>
-                    <button className="bg-gray-600 rounded-full w-12 h-6 flex items-center px-1">
-                      <div className="bg-white w-4 h-4 rounded-full"></div>
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Dark Mode</span>
-                    <button className="bg-primary rounded-full w-12 h-6 flex items-center px-1">
-                      <div className="bg-white w-4 h-4 rounded-full ml-auto"></div>
-                    </button>
-                  </div>
-                  <div className="border-t border-gray-700 pt-4">
-                    <button className="text-red-400 hover:underline text-sm">Delete account</button>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className="w-full mt-4 bg-primary hover:bg-indigo-600 rounded-lg py-2 font-semibold transition"
-                >
-                  Close
-                </button>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Transfer Modal */}
-        <TransferModal 
-          isOpen={showTransferModal} 
-          onClose={() => setShowTransferModal(false)} 
-        />
-
-        {/* Card Modal */}
-        <CardModal 
-          isOpen={showCardModal} 
-          onClose={() => setShowCardModal(false)} 
-        />
+        <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+        <TransferModal isOpen={showTransferModal} onClose={() => setShowTransferModal(false)} />
+        <CardModal isOpen={showCardModal} onClose={() => setShowCardModal(false)} />
       </div>
     </div>
   )

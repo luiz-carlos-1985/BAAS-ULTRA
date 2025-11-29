@@ -12,7 +12,7 @@ export default function Login({ onSwitch }) {
   const [showPassword, setShowPassword] = useState(false)
   const [focusedField, setFocusedField] = useState(null)
   const [error, setError] = useState('')
-  const { setUser, setToken, setLoading: setGlobalLoading } = useStore()
+  const { setUser, setToken } = useStore()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -29,20 +29,17 @@ export default function Login({ onSwitch }) {
     }
     
     setLoading(true)
-    setGlobalLoading(true)
     
     try {
       const data = await api.login(email, password)
-      if (data.token) {
+      if (data.token && data.user) {
         setToken(data.token)
         setUser(data.user)
       }
     } catch (error) {
       console.error('Login error:', error)
       setError(error.message || 'Login error')
-    } finally {
       setLoading(false)
-      setGlobalLoading(false)
     }
   }
 

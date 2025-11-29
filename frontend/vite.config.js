@@ -6,17 +6,7 @@ export default defineConfig({
   server: {
     port: 3001,
     hmr: {
-      port: 3001
-    },
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true
-      },
-      '/analytics': {
-        target: 'http://localhost:8088',
-        changeOrigin: true
-      }
+      overlay: false
     }
   }
 })

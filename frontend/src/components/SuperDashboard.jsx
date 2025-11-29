@@ -9,7 +9,6 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts'
 import { useStore } from '../store/useStore'
-import { formatCurrency, formatDate } from '../utils/formatters'
 import CryptoWidget from './CryptoWidget'
 import SocialFeed from './SocialFeed'
 import MarketplaceWidget from './MarketplaceWidget'
@@ -17,6 +16,9 @@ import PIXModal from './PIXModal'
 import InvestmentModal from './InvestmentModal'
 import GoalsModal from './GoalsModal'
 import BillPaymentModal from './BillPaymentModal'
+import VoiceAssistant from './VoiceAssistant'
+import SettingsModal from './SettingsModal'
+import { formatCurrency, formatDate } from '../utils/formatters'
 
 export default function SuperDashboard() {
   const { user, accounts, cards, transactions, totalBalance, logout } = useStore()
@@ -383,10 +385,96 @@ export default function SuperDashboard() {
     </div>
   )
 
+  const renderCardsSection = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Meus Cartões</h2>
+      <div className="grid gap-4">
+        {cards.map((card, index) => (
+          <motion.div
+            key={card.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 text-white"
+          >
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <p className="text-sm opacity-80">Cartão {card.type === 'virtual' ? 'Virtual' : 'Físico'}</p>
+                <p className="text-xs opacity-60 mt-1">Válido até {card.expiryDate || '12/28'}</p>
+              </div>
+              <CreditCard className="w-8 h-8" />
+            </div>
+            <p className="font-mono text-lg mb-4">{card.number || '**** **** **** 1234'}</p>
+            <div className="flex justify-between items-end">
+              <div>
+                <p className="text-xs opacity-60">Limite disponível</p>
+                <p className="text-xl font-bold">R$ {(card.limit || 5000).toLocaleString()}</p>
+              </div>
+              <button className="bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2 text-sm font-semibold transition">
+                Gerenciar
+              </button>
+            </div>
+          </motion.div>
+        ))}
+        {cards.length === 0 && (
+          <div className="glass rounded-2xl p-8 text-center">
+            <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-400 mb-4">Nenhum cartão encontrado</p>
+            <button className="bg-primary rounded-lg px-6 py-2 font-semibold">Criar Cartão</button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderPaymentsSection = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Pagamentos</h2>
+      <div className="grid grid-cols-2 gap-4">
+        <button onClick={() => setShowPIXModal(true)} className="glass rounded-2xl p-6 text-left hover:bg-white/5 transition">
+          <QrCode className="w-8 h-8 text-green-400 mb-3" />
+          <h3 className="font-semibold mb-1">PIX</h3>
+          <p className="text-xs text-gray-400">Transferência instantânea</p>
+        </button>
+        <button onClick={() => { setBillType('electricity'); setShowBillModal(true) }} className="glass rounded-2xl p-6 text-left hover:bg-white/5 transition">
+          <Home className="w-8 h-8 text-yellow-400 mb-3" />
+          <h3 className="font-semibold mb-1">Contas</h3>
+          <p className="text-xs text-gray-400">Pagar boletos</p>
+        </button>
+        <button className="glass rounded-2xl p-6 text-left hover:bg-white/5 transition">
+          <Smartphone className="w-8 h-8 text-blue-400 mb-3" />
+          <h3 className="font-semibold mb-1">Recarga</h3>
+          <p className="text-xs text-gray-400">Celular e transporte</p>
+        </button>
+        <button className="glass rounded-2xl p-6 text-left hover:bg-white/5 transition">
+          <Send className="w-8 h-8 text-purple-400 mb-3" />
+          <h3 className="font-semibold mb-1">Transferir</h3>
+          <p className="text-xs text-gray-400">TED e DOC</p>
+        </button>
+      </div>
+      <div className="glass rounded-2xl p-6">
+        <h3 className="font-bold mb-4">Pagamentos Recentes</h3>
+        <div className="space-y-3">
+          {transactions.slice(0, 5).map((t, i) => (
+            <div key={i} className="flex justify-between items-center">
+              <div>
+                <p className="font-semibold text-sm">{t.description}</p>
+                <p className="text-xs text-gray-400">{formatDate(t.date)}</p>
+              </div>
+              <p className="font-bold text-red-400">-R$ {Math.abs(t.amount).toFixed(2)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+
   const renderSection = () => {
     switch(activeSection) {
       case 'home': return renderHomeSection()
+      case 'payments': return renderPaymentsSection()
       case 'investments': return renderInvestmentsSection()
+      case 'cards': return renderCardsSection()
       case 'rewards': return renderRewardsSection()
       case 'ai': return renderAISection()
       case 'social': return <SocialFeed />
@@ -483,56 +571,9 @@ export default function SuperDashboard() {
         </div>
       )}
 
-      {showSettings && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowSettings(false)}>
-          <div className="glass rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold mb-4">Settings</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span>Push Notifications</span>
-                <button className="bg-primary rounded-full w-12 h-6 flex items-center px-1">
-                  <div className="bg-white w-4 h-4 rounded-full ml-auto"></div>
-                </button>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Dark Mode</span>
-                <button className="bg-primary rounded-full w-12 h-6 flex items-center px-1">
-                  <div className="bg-white w-4 h-4 rounded-full ml-auto"></div>
-                </button>
-              </div>
-            </div>
-            <button onClick={() => setShowSettings(false)} className="w-full mt-4 bg-primary rounded-lg py-2">
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
 
-      {showVoiceAssistant && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowVoiceAssistant(false)}>
-          <div className="glass rounded-2xl p-6 max-w-md w-full text-center" onClick={(e) => e.stopPropagation()}>
-            <div className="w-20 h-20 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mic className="w-10 h-10 text-white" />
-            </div>
-            <h3 className="text-xl font-bold mb-2">Voice Assistant</h3>
-            <p className="text-gray-400 mb-6">Say "Hello" to start</p>
-            <div className="flex gap-4 justify-center">
-              <button 
-                onClick={() => alert('Starting recording...')}
-                className="bg-red-500 rounded-full p-4"
-              >
-                <Mic className="w-6 h-6 text-white" />
-              </button>
-              <button 
-                onClick={() => setShowVoiceAssistant(false)}
-                className="bg-gray-700 rounded-full p-4"
-              >
-                <X className="w-6 h-6 text-white" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <VoiceAssistant isOpen={showVoiceAssistant} onClose={() => setShowVoiceAssistant(false)} />
 
       {/* Advanced Modals */}
       <PIXModal isOpen={showPIXModal} onClose={() => setShowPIXModal(false)} />
