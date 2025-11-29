@@ -30,7 +30,7 @@ var db *gorm.DB
 
 func main() {
 	dbURL := getEnv("DATABASE_URL", "postgres://postgres:123456@localhost:5432/baas?sslmode=disable")
-	port := getEnv("PORT", "8084")
+	port := getEnv("PORT", "8083")
 
 	var err error
 	db, err = gorm.Open(postgres.Open(dbURL), &gorm.Config{})

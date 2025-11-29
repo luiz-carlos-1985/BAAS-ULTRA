@@ -1,13 +1,20 @@
-const API_URL = 'http://localhost:8080/api/v1'
+import { mockApi } from './mockApi.js'
 
-export const api = {
+const API_URL = '/api/v1'
+const USE_MOCK = true // Altere para false quando o backend estiver rodando
+
+export const api = USE_MOCK ? mockApi : {
   async register(data) {
     const res = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
-    return res.json()
+    const json = await res.json()
+    if (!res.ok) {
+      throw new Error(json.error || 'Registration failed')
+    }
+    return json
   },
 
   async login(email, password) {
@@ -16,7 +23,11 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     })
-    return res.json()
+    const json = await res.json()
+    if (!res.ok) {
+      throw new Error(json.error || 'Login failed')
+    }
+    return json
   },
 
   async createAccount(token, data) {
@@ -63,7 +74,7 @@ export const api = {
   },
 
   async getDashboard(token, userId) {
-    const res = await fetch(`http://localhost:8088/analytics/dashboard?user_id=${userId}`, {
+    const res = await fetch(`/analytics/dashboard?user_id=${userId}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     return res.json()

@@ -70,7 +70,11 @@ func pixPayment(c *gin.Context) {
 		return
 	}
 
-	fromID, _ := uuid.Parse(req.FromAccountID)
+	fromID, err := uuid.Parse(req.FromAccountID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid account ID"})
+		return
+	}
 	toID := uuid.New()
 
 	metadata, _ := json.Marshal(map[string]interface{}{
@@ -92,7 +96,10 @@ func pixPayment(c *gin.Context) {
 		CompletedAt:   timePtr(time.Now()),
 	}
 
-	db.Create(&payment)
+	if err := db.Create(&payment).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"payment":         payment,
@@ -142,7 +149,11 @@ func tedPayment(c *gin.Context) {
 		return
 	}
 
-	fromID, _ := uuid.Parse(req.FromAccountID)
+	fromID, err := uuid.Parse(req.FromAccountID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid account ID"})
+		return
+	}
 
 	metadata, _ := json.Marshal(map[string]interface{}{
 		"to_bank":    req.ToBank,
@@ -162,7 +173,10 @@ func tedPayment(c *gin.Context) {
 		CreatedAt:     time.Now(),
 	}
 
-	db.Create(&payment)
+	if err := db.Create(&payment).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"payment": payment,
@@ -184,7 +198,11 @@ func wireTransfer(c *gin.Context) {
 		return
 	}
 
-	fromID, _ := uuid.Parse(req.FromAccountID)
+	fromID, err := uuid.Parse(req.FromAccountID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid account ID"})
+		return
+	}
 
 	metadata, _ := json.Marshal(map[string]interface{}{
 		"to_iban":  req.ToIBAN,
@@ -203,7 +221,10 @@ func wireTransfer(c *gin.Context) {
 		CreatedAt:     time.Now(),
 	}
 
-	db.Create(&payment)
+	if err := db.Create(&payment).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"payment":      payment,
@@ -238,7 +259,11 @@ func generateBoleto(c *gin.Context) {
 
 func getPayment(c *gin.Context) {
 	id := c.Param("id")
-	paymentID, _ := uuid.Parse(id)
+	paymentID, err := uuid.Parse(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payment ID"})
+		return
+	}
 
 	var payment Payment
 	if err := db.First(&payment, paymentID).Error; err != nil {
@@ -251,7 +276,11 @@ func getPayment(c *gin.Context) {
 
 func refundPayment(c *gin.Context) {
 	id := c.Param("id")
-	paymentID, _ := uuid.Parse(id)
+	paymentID, err := uuid.Parse(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payment ID"})
+		return
+	}
 
 	var payment Payment
 	if err := db.First(&payment, paymentID).Error; err != nil {
@@ -260,7 +289,10 @@ func refundPayment(c *gin.Context) {
 	}
 
 	payment.Status = "refunded"
-	db.Save(&payment)
+	if err := db.Save(&payment).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to refund payment"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"payment": payment,
@@ -286,15 +318,18 @@ func batchPayment(c *gin.Context) {
 
 	for _, p := range req.Payments {
 		payment := Payment{
-			ID:          uuid.New(),
-			ToAccountID: uuid.New(),
-			Amount:      p.Amount,
-			Currency:    "BRL",
-			Type:        "batch",
-			Status:      "completed",
-			CreatedAt:   time.Now(),
+			ID:            uuid.New(),
+			FromAccountID: uuid.New(),
+			ToAccountID:   uuid.New(),
+			Amount:        p.Amount,
+			Currency:      "BRL",
+			Type:          "batch",
+			Status:        "completed",
+			CreatedAt:     time.Now(),
 		}
-		db.Create(&payment)
+		if err := db.Create(&payment).Error; err != nil {
+			continue
+		}
 		processed++
 	}
 

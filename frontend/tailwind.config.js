@@ -5,7 +5,7 @@ export default {
       colors: {
         primary: '#6366f1',
         dark: '#0f172a',
-        'dark-light': '#1e293b'
+        'dark-light': '#334155'
       },
       screens: {
         'xs': '475px',

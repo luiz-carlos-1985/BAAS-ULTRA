@@ -15,12 +15,17 @@ const {
 } = require('./middleware/advanced');
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3001;
 
 const circuitBreakers = {};
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3001', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(compression());
 app.use(express.json());
 app.use(morgan('combined'));
@@ -82,11 +87,14 @@ const proxyRequest = async (service, path, method, data, headers) => {
 // Auth routes
 app.post('/api/v1/auth/register', async (req, res) => {
   try {
+    console.log('Register request received:', req.body);
     const result = await proxyRequest('auth', '/auth/register', 'POST', req.body);
     res.json(result);
   } catch (error) {
     console.error('Register error:', error);
-    res.status(error.status || 500).json(error);
+    const statusCode = error.response?.status || error.status || 500;
+    const errorData = error.response?.data || error.error || { error: 'Registration failed' };
+    res.status(statusCode).json(errorData);
   }
 });
 
@@ -257,7 +265,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 API Gateway running on port ${PORT}`);
   console.log(`📚 Documentation: http://localhost:${PORT}/api/v1/docs`);
+  console.log(`🌐 CORS enabled for: http://localhost:3001`);
 });
