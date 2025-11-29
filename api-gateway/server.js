@@ -69,6 +69,10 @@ const proxyRequest = async (service, path, method, data, headers) => {
     });
     return response.data;
   } catch (error) {
+    console.error(`Proxy error to ${service}:`, error.message);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+    }
     throw error.response ? error.response.data : error;
   }
 };
@@ -81,6 +85,7 @@ app.post('/api/v1/auth/register', async (req, res) => {
     const result = await proxyRequest('auth', '/auth/register', 'POST', req.body);
     res.json(result);
   } catch (error) {
+    console.error('Register error:', error);
     res.status(error.status || 500).json(error);
   }
 });

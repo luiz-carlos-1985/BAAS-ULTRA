@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "jsx-a11y/click-events-have-key-events": "warn",
+    "jsx-a11y/no-static-element-interactions": "warn",
+    "jsx-a11y/label-has-associated-control": "warn",
+    "jsx-a11y/alt-text": "error",
+    "jsx-a11y/aria-props": "error",
+    "jsx-a11y/aria-role": "error",
+    "jsx-a11y/role-has-required-aria-props": "error",
+    "jsx-a11y/role-supports-aria-props": "error",
+    "jsx-a11y/tabindex-no-positive": "error",
+    "react/jsx-no-target-blank": "error",
+    "react/no-array-index-key": "warn"
+  },
+  "extends": [
+    "plugin:jsx-a11y/recommended"
+  ]
+}

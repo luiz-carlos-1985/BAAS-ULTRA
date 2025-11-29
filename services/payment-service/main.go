@@ -31,7 +31,7 @@ type Payment struct {
 var db *gorm.DB
 
 func main() {
-	dbURL := getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/baas?sslmode=disable")
+	dbURL := getEnv("DATABASE_URL", "postgres://postgres:123456@localhost:5432/baas?sslmode=disable")
 	port := getEnv("PORT", "8084")
 
 	var err error

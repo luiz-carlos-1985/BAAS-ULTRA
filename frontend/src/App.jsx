@@ -14,7 +14,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen min-h-screen-safe flex items-center justify-center p-3 sm:p-4 relative overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
@@ -28,6 +28,7 @@ export default function App() {
             ease: "linear"
           }}
           className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-full blur-3xl"
+          style={{ willChange: 'transform' }}
         />
         <motion.div
           animate={{
@@ -40,11 +41,12 @@ export default function App() {
             ease: "linear"
           }}
           className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-purple-600/20 to-primary/20 rounded-full blur-3xl"
+          style={{ willChange: 'transform' }}
         />
       </div>
 
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 w-full flex justify-center">
         <AnimatePresence mode="wait">
           {isLogin ? (
             <Login key="login" onSwitch={() => setIsLogin(false)} />
