@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Lock, Mail, Eye, EyeOff, ArrowRight, Shield, Zap } from 'lucide-react'
+import { Sparkles, Lock, Mail, Eye, EyeOff, ArrowRight, Shield, Zap, AlertCircle } from 'lucide-react'
 import { api } from '../services/api'
 import { useStore } from '../store/useStore'
+import { validateEmail } from '../utils/formatters'
 
 export default function Login({ onSwitch }) {
   const [email, setEmail] = useState('')
@@ -10,11 +11,26 @@ export default function Login({ onSwitch }) {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [focusedField, setFocusedField] = useState(null)
-  const { setUser, setToken } = useStore()
+  const [error, setError] = useState('')
+  const { setUser, setToken, setLoading: setGlobalLoading } = useStore()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
+    
+    if (!validateEmail(email)) {
+      setError('Email inválido')
+      return
+    }
+    
+    if (password.length < 6) {
+      setError('Senha deve ter pelo menos 6 caracteres')
+      return
+    }
+    
     setLoading(true)
+    setGlobalLoading(true)
+    
     try {
       const data = await api.login(email, password)
       if (data.token) {
@@ -23,9 +39,11 @@ export default function Login({ onSwitch }) {
       }
     } catch (error) {
       console.error('Login error:', error)
-      alert(error.message || 'Erro ao fazer login')
+      setError(error.message || 'Erro ao fazer login')
+    } finally {
+      setLoading(false)
+      setGlobalLoading(false)
     }
-    setLoading(false)
   }
 
   const quickLoginDemo = () => {
@@ -105,6 +123,17 @@ export default function Login({ onSwitch }) {
               <Zap className="w-4 h-4 text-yellow-400" />
             </motion.p>
           </div>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-2 text-red-400 text-sm mb-4"
+            >
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {error}
+            </motion.div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             <motion.div

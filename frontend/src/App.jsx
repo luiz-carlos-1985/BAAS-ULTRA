@@ -4,13 +4,20 @@ import { useStore } from './store/useStore'
 import Login from './components/Login'
 import Register from './components/Register'
 import Dashboard from './components/Dashboard'
+import ErrorBoundary from './components/ErrorBoundary'
+import { useToast } from './components/Toast'
 
 export default function App() {
   const [isLogin, setIsLogin] = useState(true)
   const { user } = useStore()
+  const { ToastContainer } = useToast()
 
   if (user) {
-    return <Dashboard />
+    return (
+      <ErrorBoundary>
+        <Dashboard />
+      </ErrorBoundary>
+    )
   }
 
   return (
@@ -88,17 +95,22 @@ export default function App() {
 
       {/* Content */}
       <div className="relative z-10 w-full flex justify-center">
-        <AnimatePresence mode="wait">
-          {isLogin ? (
-            <Login key="login" onSwitch={() => setIsLogin(false)} />
-          ) : (
-            <Register key="register" onSwitch={() => setIsLogin(true)} />
-          )}
-        </AnimatePresence>
+        <ErrorBoundary>
+          <AnimatePresence mode="wait">
+            {isLogin ? (
+              <Login key="login" onSwitch={() => setIsLogin(false)} />
+            ) : (
+              <Register key="register" onSwitch={() => setIsLogin(true)} />
+            )}
+          </AnimatePresence>
+        </ErrorBoundary>
       </div>
       
       {/* Grid overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
+      
+      {/* Toast Container */}
+      <ToastContainer />
     </div>
   )
 }

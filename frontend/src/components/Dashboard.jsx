@@ -4,9 +4,12 @@ import { CreditCard, Send, TrendingUp, Wallet, LogOut, Plus, Eye, EyeOff, Zap, S
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { useStore } from '../store/useStore'
 import { api } from '../services/api'
+import { formatCurrency, formatDate } from '../utils/formatters'
+import TransferModal from './TransferModal'
+import CardModal from './CardModal'
 
 export default function Dashboard() {
-  const { user, token, accounts, cards, setAccounts, setCards, logout } = useStore()
+  const { user, token, accounts, cards, transactions, totalBalance, setAccounts, setCards, logout } = useStore()
   const [showBalance, setShowBalance] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [loading, setLoading] = useState(false)
@@ -14,6 +17,8 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState(3)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showTransferModal, setShowTransferModal] = useState(false)
+  const [showCardModal, setShowCardModal] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -89,7 +94,7 @@ export default function Dashboard() {
     { name: 'Outros', value: 400, color: '#6366f1' }
   ]
 
-  const recentTransactions = [
+  const recentTransactions = transactions.length > 0 ? transactions.slice(0, 5) : [
     { id: 1, type: 'income', amount: 2500, description: 'Salário', date: '2024-01-15', category: 'work' },
     { id: 2, type: 'expense', amount: -120, description: 'Supermercado', date: '2024-01-14', category: 'food' },
     { id: 3, type: 'expense', amount: -45, description: 'Uber', date: '2024-01-14', category: 'transport' },
@@ -179,7 +184,7 @@ export default function Dashboard() {
                     animate={showBalance ? { scale: [1, 1.05, 1] } : {}}
                     transition={{ duration: 0.3 }}
                   >
-                    {showBalance ? `$${(24170.75).toLocaleString()}` : '••••••'}
+                    {showBalance ? formatCurrency(totalBalance()) : '••••••'}
                   </motion.h2>
                   <motion.button 
                     onClick={() => setShowBalance(!showBalance)} 
@@ -301,7 +306,7 @@ export default function Dashboard() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => alert('Funcionalidade de transferência em desenvolvimento!')}
+              onClick={() => setShowTransferModal(true)}
               className="bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition touch-manipulation"
             >
               <Send className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -311,11 +316,11 @@ export default function Dashboard() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => alert('IA Insights: Seus gastos estão 15% abaixo da média. Continue assim!')}
+              onClick={() => setShowCardModal(true)}
               className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition touch-manipulation"
             >
-              <Brain className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span className="text-xs sm:text-sm font-semibold">IA Insights</span>
+              <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
+              <span className="text-xs sm:text-sm font-semibold">Ver Cartões</span>
             </motion.button>
           </div>
         </motion.div>
@@ -463,14 +468,14 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <p className="font-semibold text-sm">{transaction.description}</p>
-                      <p className="text-xs text-gray-400">{transaction.date}</p>
+                      <p className="text-xs text-gray-400">{formatDate(transaction.date)}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className={`font-bold ${
                       transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
                     }`}>
-                      {transaction.type === 'income' ? '+' : ''}${Math.abs(transaction.amount)}
+                      {transaction.type === 'income' ? '+' : ''}{formatCurrency(Math.abs(transaction.amount))}
                     </p>
                     <p className="text-xs text-gray-400 capitalize">{transaction.category}</p>
                   </div>
@@ -527,7 +532,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex justify-between items-end">
                     <div>
-                      <p className="text-2xl font-bold">${(account.balance || 15420.50).toLocaleString()}</p>
+                      <p className="text-2xl font-bold">{formatCurrency(account.balance || 15420.50)}</p>
                       <p className="text-xs text-gray-400">USD</p>
                     </div>
                     <div className="flex items-center gap-1 text-green-400 text-sm">
@@ -654,6 +659,18 @@ export default function Dashboard() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Transfer Modal */}
+        <TransferModal 
+          isOpen={showTransferModal} 
+          onClose={() => setShowTransferModal(false)} 
+        />
+
+        {/* Card Modal */}
+        <CardModal 
+          isOpen={showCardModal} 
+          onClose={() => setShowCardModal(false)} 
+        />
       </div>
     </div>
   )

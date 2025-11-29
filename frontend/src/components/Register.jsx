@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Lock, Mail, User, Eye, EyeOff, ArrowRight, Shield, Zap } from 'lucide-react'
+import { Sparkles, Lock, Mail, User, Eye, EyeOff, ArrowRight, Shield, Zap, AlertCircle } from 'lucide-react'
 import { api } from '../services/api'
 import { useStore } from '../store/useStore'
+import { validateEmail, validatePassword } from '../utils/formatters'
 
 export default function Register({ onSwitch }) {
   const [formData, setFormData] = useState({
@@ -14,15 +15,29 @@ export default function Register({ onSwitch }) {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [focusedField, setFocusedField] = useState(null)
-  const { setUser, setToken } = useStore()
+  const [errors, setErrors] = useState({})
+  const { setUser, setToken, setLoading: setGlobalLoading } = useStore()
+
+  const validateForm = () => {
+    const newErrors = {}
+    
+    if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório'
+    if (!validateEmail(formData.email)) newErrors.email = 'Email inválido'
+    if (!validatePassword(formData.password)) newErrors.password = 'Senha deve ter pelo menos 6 caracteres'
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Senhas não coincidem'
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (formData.password !== formData.confirmPassword) {
-      alert('Senhas não coincidem')
-      return
-    }
+    
+    if (!validateForm()) return
+    
     setLoading(true)
+    setGlobalLoading(true)
+    
     try {
       const data = await api.register(formData)
       if (data.token) {
@@ -31,13 +46,18 @@ export default function Register({ onSwitch }) {
       }
     } catch (error) {
       console.error('Register error:', error)
-      alert(error.message || 'Erro ao criar conta')
+      setErrors({ general: error.message || 'Erro ao criar conta' })
+    } finally {
+      setLoading(false)
+      setGlobalLoading(false)
     }
-    setLoading(false)
   }
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }))
+    }
   }
 
   return (
@@ -100,6 +120,17 @@ export default function Register({ onSwitch }) {
             </motion.p>
           </div>
 
+          {errors.general && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-2 text-red-400 text-sm mb-4"
+            >
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {errors.general}
+            </motion.div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -116,9 +147,11 @@ export default function Register({ onSwitch }) {
                   onFocus={() => setFocusedField('name')}
                   onBlur={() => setFocusedField(null)}
                   className={`w-full bg-dark-light border rounded-xl pl-11 pr-4 py-3 focus:outline-none transition text-base ${
-                    focusedField === 'name' 
-                      ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/20' 
-                      : 'border-gray-700 hover:border-gray-600'
+                    errors.name 
+                      ? 'border-red-500 ring-2 ring-red-500/20' 
+                      : focusedField === 'name' 
+                        ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/20' 
+                        : 'border-gray-700 hover:border-gray-600'
                   }`}
                   placeholder="Seu nome completo"
                   required
@@ -126,6 +159,9 @@ export default function Register({ onSwitch }) {
                   transition={{ duration: 0.2 }}
                 />
               </div>
+              {errors.name && (
+                <p className="text-red-400 text-xs mt-1">{errors.name}</p>
+              )}
             </motion.div>
 
             <motion.div
@@ -143,9 +179,11 @@ export default function Register({ onSwitch }) {
                   onFocus={() => setFocusedField('email')}
                   onBlur={() => setFocusedField(null)}
                   className={`w-full bg-dark-light border rounded-xl pl-11 pr-4 py-3 focus:outline-none transition text-base ${
-                    focusedField === 'email' 
-                      ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/20' 
-                      : 'border-gray-700 hover:border-gray-600'
+                    errors.email 
+                      ? 'border-red-500 ring-2 ring-red-500/20' 
+                      : focusedField === 'email' 
+                        ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/20' 
+                        : 'border-gray-700 hover:border-gray-600'
                   }`}
                   placeholder="seu@email.com"
                   required
@@ -153,6 +191,9 @@ export default function Register({ onSwitch }) {
                   transition={{ duration: 0.2 }}
                 />
               </div>
+              {errors.email && (
+                <p className="text-red-400 text-xs mt-1">{errors.email}</p>
+              )}
             </motion.div>
 
             <motion.div
@@ -170,9 +211,11 @@ export default function Register({ onSwitch }) {
                   onFocus={() => setFocusedField('password')}
                   onBlur={() => setFocusedField(null)}
                   className={`w-full bg-dark-light border rounded-xl pl-11 pr-12 py-3 focus:outline-none transition text-base ${
-                    focusedField === 'password' 
-                      ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/20' 
-                      : 'border-gray-700 hover:border-gray-600'
+                    errors.password 
+                      ? 'border-red-500 ring-2 ring-red-500/20' 
+                      : focusedField === 'password' 
+                        ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/20' 
+                        : 'border-gray-700 hover:border-gray-600'
                   }`}
                   placeholder="••••••••"
                   required
@@ -194,6 +237,9 @@ export default function Register({ onSwitch }) {
                   </AnimatePresence>
                 </motion.button>
               </div>
+              {errors.password && (
+                <p className="text-red-400 text-xs mt-1">{errors.password}</p>
+              )}
             </motion.div>
 
             <motion.div
@@ -211,9 +257,11 @@ export default function Register({ onSwitch }) {
                   onFocus={() => setFocusedField('confirmPassword')}
                   onBlur={() => setFocusedField(null)}
                   className={`w-full bg-dark-light border rounded-xl pl-11 pr-4 py-3 focus:outline-none transition text-base ${
-                    focusedField === 'confirmPassword' 
-                      ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/20' 
-                      : 'border-gray-700 hover:border-gray-600'
+                    errors.confirmPassword 
+                      ? 'border-red-500 ring-2 ring-red-500/20' 
+                      : focusedField === 'confirmPassword' 
+                        ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/20' 
+                        : 'border-gray-700 hover:border-gray-600'
                   }`}
                   placeholder="••••••••"
                   required
@@ -221,6 +269,9 @@ export default function Register({ onSwitch }) {
                   transition={{ duration: 0.2 }}
                 />
               </div>
+              {errors.confirmPassword && (
+                <p className="text-red-400 text-xs mt-1">{errors.confirmPassword}</p>
+              )}
             </motion.div>
 
             <motion.button
