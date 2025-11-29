@@ -12,17 +12,24 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
   const [notifications, setNotifications] = useState(3)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
   useEffect(() => {
     loadData()
   }, [])
 
   const loadData = async () => {
+    if (accounts.length > 0) return
     try {
-      const accountsData = await api.getAccounts(token)
-      if (accountsData.accounts) setAccounts(accountsData.accounts)
+      if (token) {
+        const accountsData = await api.getAccounts(token)
+        if (accountsData && accountsData.accounts) {
+          setAccounts(accountsData.accounts)
+        }
+      }
     } catch (error) {
-      console.error('Erro ao carregar dados')
+      console.error('Erro ao carregar dados:', error)
     }
   }
 
@@ -34,8 +41,8 @@ export default function Dashboard() {
         currency: 'USD',
         type: 'checking'
       })
-      if (data.account) {
-        setAccounts([...accounts, data.account])
+      if (data) {
+        setAccounts([...accounts, data])
         alert('Conta criada com sucesso!')
       }
     } catch (error) {
@@ -56,8 +63,8 @@ export default function Dashboard() {
         type: 'virtual',
         limit: 500000
       })
-      if (data.card) {
-        setCards([...cards, data.card])
+      if (data) {
+        setCards([...cards, data])
         alert('Cartão criado com sucesso!')
       }
     } catch (error) {
@@ -97,7 +104,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
+    <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 bg-slate-900">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -121,6 +128,10 @@ export default function Dashboard() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                setShowNotifications(!showNotifications)
+                if (notifications > 0) setNotifications(0)
+              }}
               className="glass rounded-xl p-3 relative"
             >
               <Bell className="w-5 h-5" />
@@ -133,6 +144,7 @@ export default function Dashboard() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => setShowSettings(!showSettings)}
               className="glass rounded-xl p-3"
             >
               <Settings className="w-5 h-5" />
@@ -289,6 +301,7 @@ export default function Dashboard() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => alert('Funcionalidade de transferência em desenvolvimento!')}
               className="bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition touch-manipulation"
             >
               <Send className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -298,6 +311,7 @@ export default function Dashboard() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => alert('IA Insights: Seus gastos estão 15% abaixo da média. Continue assim!')}
               className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 transition touch-manipulation"
             >
               <Brain className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -422,7 +436,12 @@ export default function Dashboard() {
                 <Zap className="w-5 h-5 text-yellow-400" />
                 Transações Recentes
               </h3>
-              <button className="text-primary hover:underline text-sm">Ver todas</button>
+              <button 
+                onClick={() => alert('Visualizando todas as transações...')}
+                className="text-primary hover:underline text-sm"
+              >
+                Ver todas
+              </button>
             </div>
             <div className="space-y-3">
               {recentTransactions.map((transaction, index) => (
@@ -534,6 +553,107 @@ export default function Dashboard() {
             </div>
           </motion.div>
         </div>
+
+        {/* Notifications Modal */}
+        <AnimatePresence>
+          {showNotifications && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+              onClick={() => setShowNotifications(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="glass rounded-2xl p-6 max-w-md w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-yellow-400" />
+                  Notificações
+                </h3>
+                <div className="space-y-3">
+                  <div className="bg-dark-light rounded-lg p-3">
+                    <p className="font-semibold text-sm">Nova transação</p>
+                    <p className="text-xs text-gray-400">Recebimento de $2,500 - Salário</p>
+                  </div>
+                  <div className="bg-dark-light rounded-lg p-3">
+                    <p className="font-semibold text-sm">Cartão criado</p>
+                    <p className="text-xs text-gray-400">Seu novo cartão virtual está pronto</p>
+                  </div>
+                  <div className="bg-dark-light rounded-lg p-3">
+                    <p className="font-semibold text-sm">Meta atingida</p>
+                    <p className="text-xs text-gray-400">Parabéns! Você economizou $2,210</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowNotifications(false)}
+                  className="w-full mt-4 bg-primary hover:bg-indigo-600 rounded-lg py-2 font-semibold transition"
+                >
+                  Fechar
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Settings Modal */}
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+              onClick={() => setShowSettings(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="glass rounded-2xl p-6 max-w-md w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-blue-400" />
+                  Configurações
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span>Notificações Push</span>
+                    <button className="bg-primary rounded-full w-12 h-6 flex items-center px-1">
+                      <div className="bg-white w-4 h-4 rounded-full ml-auto"></div>
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Biometria</span>
+                    <button className="bg-gray-600 rounded-full w-12 h-6 flex items-center px-1">
+                      <div className="bg-white w-4 h-4 rounded-full"></div>
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Modo Escuro</span>
+                    <button className="bg-primary rounded-full w-12 h-6 flex items-center px-1">
+                      <div className="bg-white w-4 h-4 rounded-full ml-auto"></div>
+                    </button>
+                  </div>
+                  <div className="border-t border-gray-700 pt-4">
+                    <button className="text-red-400 hover:underline text-sm">Excluir conta</button>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="w-full mt-4 bg-primary hover:bg-indigo-600 rounded-lg py-2 font-semibold transition"
+                >
+                  Fechar
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

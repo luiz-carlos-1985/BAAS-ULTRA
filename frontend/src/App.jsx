@@ -14,7 +14,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen min-h-screen-safe flex items-center justify-center p-3 sm:p-4 relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900">
+    <div className="min-h-screen flex items-center justify-center p-3 sm:p-4 relative overflow-hidden bg-slate-900">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div

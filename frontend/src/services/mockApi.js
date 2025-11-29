@@ -1,5 +1,6 @@
 // Mock API para desenvolvimento sem backend
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+const generateId = () => crypto.randomUUID()
 
 const mockUsers = [
   { id: 1, email: 'admin@baas.com', password: '123456', name: 'Admin User' }
@@ -14,7 +15,7 @@ export const mockApi = {
   async register(data) {
     await delay(500)
     const newUser = { 
-      id: Date.now(), 
+      id: generateId(), 
       ...data, 
       name: data.name || 'New User' 
     }
@@ -40,7 +41,7 @@ export const mockApi = {
   async createAccount(token, data) {
     await delay(300)
     const newAccount = {
-      id: Date.now(),
+      id: generateId(),
       userId: 1,
       type: data.type,
       balance: 0,
@@ -58,7 +59,7 @@ export const mockApi = {
   async createCard(token, data) {
     await delay(400)
     return {
-      id: Date.now(),
+      id: generateId(),
       accountId: data.accountId,
       type: data.type,
       number: '**** **** **** ' + Math.random().toString().slice(2, 6),
@@ -70,7 +71,7 @@ export const mockApi = {
   async transfer(token, data) {
     await delay(600)
     return {
-      id: Date.now(),
+      id: generateId(),
       fromAccount: data.fromAccount,
       toAccount: data.toAccount,
       amount: data.amount,
